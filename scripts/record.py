@@ -54,7 +54,7 @@ class Address:
 
 class Stats:
     def __init__(self, cid, ipfs_hop, providers, num_blocks, content_size,
-                 resolve_time, download_time ):
+                 resolve_time, download_time, actual_provider ):
         self.cid = cid
         self.ipfs_hop = ipfs_hop
         self.providers = providers
@@ -62,6 +62,7 @@ class Stats:
         self.content_size = content_size
         self.resolve_time = resolve_time
         self.download_time = download_time
+        self.actual_provider = actual_provider
 
 class StatsEncoder(JSONEncoder):
     def default(self, o: Stats):
@@ -350,6 +351,27 @@ def analyse_latency( cid ):
     
     return resolve_time, download_time
 
+def analyse_content_provider( cid ):
+    """
+    Parse the content provider for a particular content ( cid )
+    :param cid: cid of the object
+    :return: provider of the cid
+    """
+    today = datetime.now().date()
+    actual_provider = []
+    with open(f'{today}_daemon.txt', 'r') as stdin:
+        for line in stdin.readlines():
+            """
+            The output of the ipfs get <cid> command is '2022-02-21T21:22:38.869Z\tWARN\tbitswap\tgo-bitswap@v0.4.0/bitswap.go:455\tBlock QmU9ErGa6WMgkV71KoLjEWkZD9S3TagHnwa9rg291MvzBX provided QmSv5JSa5vgXpZvFqYDg48gjNYeJY8ocnjztvL1a756yyR\n'
+            in the daemon output
+            """
+            if "Block" in line and "provided" in line:
+                line = line.split( ' ' )
+                current_cid = line[3].split( '\n' )[0]
+                if current_cid == cid:
+                    actual_provider.append( line[1] )
+    return actual_provider
+
 def get_ip_hop(address: Address):
     """
     find ip hop value from given Address
@@ -505,16 +527,18 @@ def get_latency_info(cid):
             process.kill()
 
 def main(preload=False):
+    # The file in data/ folder from where the cids are fetched
+    cid_file_name = 'random_sample_files_cid'
 
     today = datetime.now().date()
     all_cid = []
     # start reading all cid
     if not preload:
-        for _, _, files in os.walk("."):
+        for _, _, files in os.walk("../../data"):
             files.sort()
             for file in files:
-                if '_cid' in file:
-                    with open(f'{file}', 'r') as stdin:
+                if cid_file_name in file:
+                    with open(f'../../data/{file}', 'r') as stdin:
                         for line in stdin.readlines():
                             line = line.replace("\n", "")
                             all_cid.append(line)
@@ -522,6 +546,7 @@ def main(preload=False):
                             get_storage_info(line)
                             get_latency_info(line)
 
+    
     # read daemon log file
     # {cid : result_host_dic={}}
     all_provider_dic = {}
@@ -546,6 +571,7 @@ def main(preload=False):
         _, ipfs_hop = analyse_ipfs_hops(cid, all_provider_dic[cid])
         num_blocks, content_size = analyse_storage( cid )
         resolve_time, download_time = analyse_latency( cid )
+        actual_provider = analyse_content_provider( cid )
         if ipfs_hop == 0:
             # case of no result find
             stats = Stats(cid, ipfs_hop, {})
@@ -554,7 +580,7 @@ def main(preload=False):
         print(f'IPFS_HOP {ipfs_hop}')
         providers = get_peer_ip(all_provider_dic[cid])
         stats = Stats(cid, ipfs_hop, providers, num_blocks, content_size,
-                      resolve_time, download_time )
+                      resolve_time, download_time, actual_provider )
         all_stats.append(stats)
         for peer in providers.keys():
             print(peer)
