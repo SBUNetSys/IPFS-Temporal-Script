@@ -35,4 +35,7 @@ COPY init.sh /init.sh
 
 VOLUME ["/result", "/scripts"]
 
+# Entry point for the container.
 ENTRYPOINT ["bash", "/init.sh"]
+# Uncomment the below line to have an endless container
+# ENTRYPOINT ["tail", "-f", "/dev/null"]
