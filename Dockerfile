@@ -21,7 +21,8 @@ RUN wget https://dist.ipfs.io/go-ipfs/v0.11.0/go-ipfs_v0.11.0_linux-amd64.tar.gz
 # Init IPFS and setup system udp
 RUN ipfs init && \
     ipfs config --json Gateway.PublicGateways '{"localhost": {"Paths": ["/ipfs"],"UseSubdomains": false} }' && \
-    ipfs config Reprovider.Strategy pinned
+    ipfs config Reprovider.Strategy pinned && \
+    ipfs config Reprovider.Interval 0
 
 # get custom IPFS binary
 RUN cd ~ && \
