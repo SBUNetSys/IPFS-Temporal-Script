@@ -53,11 +53,15 @@ class Address:
 
 
 class Stats:
-    def __init__(self, cid, ipfs_hop, providers):
+    def __init__(self, cid, ipfs_hop, providers, num_blocks, content_size,
+                 resolve_time, download_time ):
         self.cid = cid
         self.ipfs_hop = ipfs_hop
         self.providers = providers
-
+        self.num_blocks = num_blocks
+        self.content_size = content_size
+        self.resolve_time = resolve_time
+        self.download_time = download_time
 
 class StatsEncoder(JSONEncoder):
     def default(self, o: Stats):
@@ -298,6 +302,54 @@ def analyse_ipfs_hops(cid, result_host_dic, visual=False):
     return cid, max_hop
 
 
+def analyse_storage( cid ):
+    """
+    Parse the num_blocks and content_size info from cid_storage.txt
+    :param cid: cid of the object
+    :return: number of blocks and the size of the content
+    """
+    size = 0
+    num_blocks = -1
+    with open(f'{cid}_storage.txt', 'r') as stdin:
+        for line in stdin.readlines():
+            # The output of the ipfs dag stat <cid> command is in the form of "Size: 152361, NumBlocks: 1\n"
+            if "Size" in line:
+                line = line.split( "," )
+                size = line[0].split( " " )[1]
+                num_blocks = line[1].split( " " )[2]
+                num_blocks = num_blocks.split( "\n" )[0]
+    return num_blocks, size
+
+def analyse_latency( cid ):
+    """
+    Parse the resolve_time and download_time info from cid_latency.txt
+    :param cid: cid of the object
+    :return: time to resolve the source of the content and time to download the content
+    """
+    resolve_time = 0
+    download_time = 0
+    with open(f'{cid}_latency.txt', 'r') as stdin:
+        for line in stdin.readlines():
+            """ 
+            The output of the ipfs get <cid> command is in the form of:
+            Started: 02-19-2022 01:51:16
+            Resolve Ended: 02-19-2022 01:51:16
+            Resolve Duraution: 0.049049
+            Download Ended: 02-19-2022 01:51:16
+            Download Duraution: 0.006891
+            Total Duraution: 0.055940
+            """
+             
+            if "Resolve Duraution:" in line:
+                resolve_time = line.split( ": " )[1]
+                resolve_time = resolve_time.split( "\n" )[0]
+
+            if "Download Duraution:" in line:
+                download_time = line.split( ": " )[1]
+                download_time = download_time.split( "\n" )[0]
+    
+    return resolve_time, download_time
+
 def get_ip_hop(address: Address):
     """
     find ip hop value from given Address
@@ -422,6 +474,35 @@ def ips_find_provider(cid):
         except subprocess.TimeoutExpired:
             process.kill()
 
+def get_storage_info(cid):
+    """
+    Get the number of blocks and the size of the conten given the CID
+    :param cid: cid to find
+    :return: None
+    """
+
+    with open(f'{cid}_storage.txt', 'w') as stdout:
+        stdout.flush()
+        try:
+            process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'dag', 'stat', cid], stdout=stdout)
+            process.wait(timeout=300)
+        except subprocess.TimeoutExpired:
+            process.kill()
+
+def get_latency_info(cid):
+    """
+    Get resolve time and download time
+    :param cid: cid to find
+    :return: None
+    """
+
+    with open(f'{cid}_latency.txt', 'w') as stdout:
+        stdout.flush()
+        try:
+            process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'get', cid], stdout=stdout)
+            process.wait(timeout=300)
+        except subprocess.TimeoutExpired:
+            process.kill()
 
 def main(preload=False):
 
@@ -438,6 +519,8 @@ def main(preload=False):
                             line = line.replace("\n", "")
                             all_cid.append(line)
                             ips_find_provider(line)
+                            get_storage_info(line)
+                            get_latency_info(line)
 
     # read daemon log file
     # {cid : result_host_dic={}}
@@ -461,6 +544,8 @@ def main(preload=False):
     # hop
     for cid in all_provider_dic:
         _, ipfs_hop = analyse_ipfs_hops(cid, all_provider_dic[cid])
+        num_blocks, content_size = analyse_storage( cid )
+        resolve_time, download_time = analyse_latency( cid )
         if ipfs_hop == 0:
             # case of no result find
             stats = Stats(cid, ipfs_hop, {})
@@ -468,7 +553,8 @@ def main(preload=False):
             continue
         print(f'IPFS_HOP {ipfs_hop}')
         providers = get_peer_ip(all_provider_dic[cid])
-        stats = Stats(cid, ipfs_hop, providers)
+        stats = Stats(cid, ipfs_hop, providers, num_blocks, content_size,
+                      resolve_time, download_time )
         all_stats.append(stats)
         for peer in providers.keys():
             print(peer)
