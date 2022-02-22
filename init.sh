@@ -1,5 +1,5 @@
 cd /result
-mkdir $(date +%F)
+mkdir -p $(date +%F)
 # start record hop information
 cd $(date +%F)
 echo $(pwd)
