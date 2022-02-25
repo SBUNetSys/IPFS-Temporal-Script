@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import requests
@@ -33,14 +34,15 @@ def main():
     all_files = {}
     all_files.update(extract_data(initial_data))
     # due to ipfs-search api limit, only allowed 100 paging
-    total_page_number = 100
+    total_page_number = 10
     # start page number 2
     page_number = 2
     while page_number <= total_page_number:
         page_data = get_page_data(page_number)
         page_number += 1
         all_files.update(extract_data(page_data))
-    with open('all_files.json', 'w') as fout:
+    now = datetime.datetime.now()
+    with open(f'{now.month}-{now.day}-{now.hour}.json', 'w') as fout:
         json.dump(all_files, fout)
 
 
