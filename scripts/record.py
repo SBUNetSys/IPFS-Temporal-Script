@@ -362,7 +362,12 @@ def analyse_content_provider(all_block_provider_dic, cid):
     :return: list of provider for the cid
     """
     # append root block provider
-    actual_provider = [all_block_provider_dic[cid]]
+    try:
+        actual_provider = [all_block_provider_dic[cid]]
+    except KeyError:
+        # case when there is no actual provider
+        actual_provider = []
+        return actual_provider
     # read sub blocks provider
     process = subprocess.Popen(
         ['ipfs', 'ls', cid],
