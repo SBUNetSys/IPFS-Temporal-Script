@@ -40,15 +40,15 @@ def main(dir_prefix, host, port):
         for cid in new_cids:
             fout.write(cid + '\n')
     # store as today's run
-    daily_file_path = os.path.join(dir_prefix, f'{current_day}_cids.txt')
+    daily_file_path = os.path.join(dir_prefix, current_day, f'{current_day}_run_cids.txt')
     shutil.copy(global_db_path, daily_file_path)
 
     # send to server
     # case of free machine
     url = f'http://{host}:{port}/addTask'
     data = {
-        'folder_name': dir_prefix,
-        'file_name': f'{current_day}_cids.txt'}
+        'folder_name': current_day,
+        'file_name': f'{current_day}_run_cids.txt'}
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     res = requests.post(url, data=json.dumps(data), headers=headers)
     if res.status_code != 200:
