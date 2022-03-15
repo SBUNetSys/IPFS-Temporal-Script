@@ -97,5 +97,10 @@ modules.xml
 # script outputs 
 timekepper.txt
 result/*
-
+data/*
+collected_data/*
+# igore python cache
+__pycache__/
+*.py[cod]
+*$py.class
 # End of https://www.toptal.com/developers/gitignore/api/jetbrains+all
