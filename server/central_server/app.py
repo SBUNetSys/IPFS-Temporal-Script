@@ -132,13 +132,13 @@ def add_task():
     if content_type == 'application/json':
         json_data = request.json
         # parse task path
-        date = json_data['date']
+        # date = json_data['date']
         folder_name = json_data['folder']
         file_name = json_data['file_name']
         task = f'{folder_name}@{file_name}'
         # append to task queue
         TASK_QUEUE.append(task)
-        app.logger.info(f'Added Task {task} date = {date}')
+        app.logger.info(f'Added Task {task}')
         data = {"status": "Success"}
         return data, 200
     else:
