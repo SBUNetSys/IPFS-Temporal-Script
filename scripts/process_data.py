@@ -7,38 +7,13 @@ import datetime
 import requests
 
 
-def main(dir_prefix, host, port):
-    now = datetime.datetime.now()
-    # check if collecting period ends or not
-    with open(os.path.join(dir_prefix, 'collect_period.txt'), 'r') as fin:
-        target_day = fin.readline().replace("\n", "")
-    current_day = now.strftime("%Y-%m-%d")
-    if current_day > target_day:
-        exit(0)
-    # load all today's data to global pool
-    # 2022-03-08_all_cid
-    file_name = f'{current_day}_all_cid.txt'
-    file_path = os.path.join(dir_prefix, current_day, file_name)
-    new_cids = []
-    with open(file_path, 'r') as fin:
-        for line in fin.readlines():
-            new_cids.append(line.replace("\n", ""))
-    # CAP to 1000
-    if len(new_cids) > 1000:
-        new_cids = new_cids[:1000]
-    # load global dataset
-    global_db_path = os.path.join(dir_prefix, 'all_data.txt')
-    global_db = []
-    try:
-        with open(global_db_path, 'r') as fin:
-            for line in fin.readlines():
-                global_db.append(line.replace("\n", ""))
-    except FileNotFoundError as e:
-        print("No global DB found, first time running?")
-    # update global db
-    with open(global_db_path, 'a') as fout:
-        for cid in new_cids:
-            fout.write(cid + '\n')
+def send_request(global_db_path, current_day, dir_prefix, host, port):
+    """
+    send request to server start daily task
+    :param global_db_path: db path
+    :param daily_file_path: file path
+    :return: None
+    """
     # store as today's run
     daily_file_path = os.path.join(dir_prefix, current_day, f'{current_day}_run_cids.txt')
     shutil.copy(global_db_path, daily_file_path)
@@ -53,6 +28,45 @@ def main(dir_prefix, host, port):
     res = requests.post(url, data=json.dumps(data), headers=headers)
     if res.status_code != 200:
         print("Error on sending request")
+
+
+def main(dir_prefix, host, port):
+    now = datetime.datetime.now()
+    global_db_path = os.path.join(dir_prefix, 'all_data.txt')
+    # check if collecting period ends or not
+    current_day = now.strftime("%Y-%m-%d")
+    with open(os.path.join(dir_prefix, 'collect_period.txt'), 'r') as fin:
+        target_day = fin.readline().replace("\n", "")
+    if current_day > target_day:
+        # send request for global db no need collect
+        os.makedirs(os.path.join(dir_prefix, current_day), exist_ok=True)
+        send_request(global_db_path, current_day, dir_prefix, host, port)
+        exit(0)
+    # load all today's data to global pool
+    # 2022-03-08_all_cid
+    file_name = f'{current_day}_all_cid.txt'
+    file_path = os.path.join(dir_prefix, current_day, file_name)
+    new_cids = []
+    with open(file_path, 'r') as fin:
+        for line in fin.readlines():
+            new_cids.append(line.replace("\n", ""))
+    # CAP to 1000
+    if len(new_cids) > 1000:
+        new_cids = new_cids[:1000]
+    # load global dataset
+    global_db = []
+    try:
+        with open(global_db_path, 'r') as fin:
+            for line in fin.readlines():
+                global_db.append(line.replace("\n", ""))
+    except FileNotFoundError as e:
+        print("No global DB found, first time running?")
+    # update global db
+    with open(global_db_path, 'a') as fout:
+        for cid in new_cids:
+            fout.write(cid + '\n')
+
+    send_request(global_db_path, current_day, dir_prefix, host, port)
 
 
 if __name__ == '__main__':
