@@ -133,7 +133,7 @@ def add_task():
         json_data = request.json
         # parse task path
         # date = json_data['date']
-        folder_name = json_data['folder']
+        folder_name = json_data['folder_name']
         file_name = json_data['file_name']
         task = f'{folder_name}@{file_name}'
         # append to task queue
