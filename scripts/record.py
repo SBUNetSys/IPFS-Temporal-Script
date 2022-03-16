@@ -733,7 +733,7 @@ def main(dir_prefix, dir_name, file_name, host, port, task):
                 os.remove(file)
     # send signal to central server
     url = f'http://{host}:{port}/taskDone'
-    params = {'task': task}
+    params = {'task_name': task}
     res = requests.get(url, params=params)
     if res.status_code != 200:
         logging.info("Error at sending finish signal")
