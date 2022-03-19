@@ -644,6 +644,22 @@ def postprocess_file(cid, all_provider_dic, all_block_provider_dic):
     return stats
 
 
+def clear_ipfs_repo():
+    """
+    Repo GC before collecting data
+    :return:
+    """
+    logging.info("Staring repo gc")
+    process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'repo', 'gc'], stdout=subprocess.PIPE)
+    for line in process.stdout.readlines():
+        logging.info(f'Repo GCed {line}')
+    try:
+        process.wait(timeout=300)
+    except subprocess.TimeoutExpired:
+        logging.info(f'Repo GC Timeout')
+        process.kill()
+
+
 def main(dir_prefix, dir_name, file_name, host, port, task):
     # The file in data/ folder from where the cids are fetched
     cid_file_path = os.path.join(dir_prefix, dir_name, file_name)
@@ -655,7 +671,8 @@ def main(dir_prefix, dir_name, file_name, host, port, task):
         for line in stdin.readlines():
             line = line.replace("\n", "")
             all_cid.append(line)
-
+    # repo gc
+    clear_ipfs_repo()
     # start preprocess with multi threading
     with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
         future_to_preprocess = {executor.submit(preprocess_file, cid): cid for cid in all_cid}
