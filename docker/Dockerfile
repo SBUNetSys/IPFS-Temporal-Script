@@ -22,7 +22,10 @@ RUN wget https://dist.ipfs.io/go-ipfs/v0.11.0/go-ipfs_v0.11.0_linux-amd64.tar.gz
 RUN ipfs init && \
     ipfs config --json Gateway.PublicGateways '{"localhost": {"Paths": ["/ipfs"],"UseSubdomains": false} }' && \
     ipfs config Reprovider.Strategy pinned && \
-    ipfs config Reprovider.Interval 0
+    ipfs config Reprovider.Interval 0 && \
+    ipfs config Datastore.StorageMax "0" && \
+    ipfs config Datastore.GCPeriod "0h" && \
+    ipfs config show
 
 # get custom IPFS binary
 RUN cd ~ && \
