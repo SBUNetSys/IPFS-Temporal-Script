@@ -73,18 +73,18 @@ class StatsEncoder(JSONEncoder):
     def default(self, o: Stats):
         json_string = o.__dict__
         providers = json_string['providers']
-        providers_new = copy.deepcopy(providers)
         actual_providers = json_string['actual_provider']
-        actual_providers_new = copy.deepcopy(actual_providers)
-        for key in providers.keys():
-            # logging.info(f'{key} => {type(providers[key])} => {providers[key]}')
-            providers_new[key] = [ob.__dict__ for ob in providers[key]]
+        if providers is not None and actual_providers is not None:
+            providers_new = copy.deepcopy(providers)
+            actual_providers_new = copy.deepcopy(actual_providers)
+            for key in providers.keys():
+                # logging.info(f'{key} => {type(providers[key])} => {providers[key]}')
+                providers_new[key] = [ob.__dict__ for ob in providers[key]]
 
-        for key in actual_providers.keys():
-            actual_providers_new[key] = [ob.__dict__ for ob in actual_providers[key]]
-        json_string['providers'] = providers_new
-        json_string['actual_provider'] = actual_providers_new
-
+            for key in actual_providers.keys():
+                actual_providers_new[key] = [ob.__dict__ for ob in actual_providers[key]]
+            json_string['providers'] = providers_new
+            json_string['actual_provider'] = actual_providers_new
         return json_string
 
 
