@@ -728,7 +728,7 @@ def main(dir_prefix, dir_name, file_name, host, port, task):
             try:
                 stats = future.result()
             except Exception as exc:
-                logging.info(f'Error {exc}')
+                logging.info(f'Error CID {cid} {exc}')
                 stats = Stats(cid, *[None for _ in range(7)])
             all_stats.append(stats)
             # save progress
