@@ -525,7 +525,7 @@ def ips_find_provider(cid):
     """
 
     with open(f'{cid}_dht.txt', 'w') as stdout:
-        # stdout.flush()
+        stdout.flush()
         try:
             process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'stats', 'dht'], stdout=stdout)
             process.wait(timeout=300)
@@ -533,7 +533,7 @@ def ips_find_provider(cid):
             process.kill()
 
     with open(f'{cid}_provid.txt', 'w') as stdout:
-        # stdout.flush()
+        stdout.flush()
         try:
             process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'dht', 'findprovs', '-v', cid], stdout=stdout)
             process.wait(timeout=300)
@@ -550,7 +550,7 @@ def get_storage_info(cid):
     """
 
     with open(f'{cid}_storage.txt', 'w') as stdout:
-        # stdout.flush()
+        stdout.flush()
         try:
             process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'dag', 'stat', cid], stdout=stdout)
             process.wait(timeout=300)
@@ -567,7 +567,7 @@ def get_latency_info(cid):
     """
 
     with open(f'{cid}_latency.txt', 'w') as stdout:
-        # stdout.flush()
+        stdout.flush()
         try:
             process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'get', cid], stdout=stdout)
             process.wait(timeout=600)
@@ -719,7 +719,7 @@ def main(dir_prefix, dir_name, file_name, host, port, task):
 
     # star multi-threading for post process
     all_stats = []
-    with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=16) as executor:
         future_to_postprocess = {executor.submit(postprocess_file, cid, all_provider_dic, all_block_provider_dic): cid
                                  for cid in all_provider_dic}
         for future in concurrent.futures.as_completed(future_to_postprocess):
