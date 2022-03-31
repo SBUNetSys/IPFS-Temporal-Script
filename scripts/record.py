@@ -482,38 +482,42 @@ def get_peer_ip(result_host_dic: dict):
     for peer in result_host_dic.keys():
         process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'dht', 'findpeer', peer], stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
-        # case of no route find
-        for line in process.stderr.readlines():
-            if str(line) != '':
-                provider_ip[peer] = []
-                break
-        with open(f'{peer}_ip.txt', 'w+') as stdout:
-            for line in process.stdout.readlines():
-                line = line.decode('utf-8')
-                # store all peer ip
-                stdout.write(line)
-                line = line.replace("\n", "")
-                line = line.split("/")
-                ip_type = line[1]
-                ip_value = line[2]
-                protocol = line[3]
-                port = line[4]
-                if ip_type == 'ip6' and ip_value == '::1':
-                    # local v6 ignore
-                    continue
-                elif ip_type == 'ip4':
-                    # exclude private ip address
-                    if ipaddress.ip_address(ip_value) in ipaddress.IPv4Network('10.0.0.0/8') or \
-                            ipaddress.ip_address(ip_value) in ipaddress.IPv4Network('172.16.0.0/12') or \
-                            ipaddress.ip_address(ip_value) in ipaddress.IPv4Network('127.0.0.0/8') or \
-                            ipaddress.ip_address(ip_value) in ipaddress.IPv4Network('192.168.0.0/16'):
-                        continue
-                # add valid ip address info
-                logging.info(f'Peer {peer} has external IP {ip_value}:{port}, {ip_type}, {protocol}')
-                if peer not in provider_ip.keys():
+        try:
+            process.wait(timeout=300)
+            # case of no route find
+            for line in process.stderr.readlines():
+                if str(line) != '':
                     provider_ip[peer] = []
-                address = Address(ip_value, ip_type, port, protocol)
-                provider_ip[peer].append(address)
+                    break
+            with open(f'{peer}_ip.txt', 'w+') as stdout:
+                for line in process.stdout.readlines():
+                    line = line.decode('utf-8')
+                    # store all peer ip
+                    stdout.write(line)
+                    line = line.replace("\n", "")
+                    line = line.split("/")
+                    ip_type = line[1]
+                    ip_value = line[2]
+                    protocol = line[3]
+                    port = line[4]
+                    if ip_type == 'ip6' and ip_value == '::1':
+                        # local v6 ignore
+                        continue
+                    elif ip_type == 'ip4':
+                        # exclude private ip address
+                        if ipaddress.ip_address(ip_value) in ipaddress.IPv4Network('10.0.0.0/8') or \
+                                ipaddress.ip_address(ip_value) in ipaddress.IPv4Network('172.16.0.0/12') or \
+                                ipaddress.ip_address(ip_value) in ipaddress.IPv4Network('127.0.0.0/8') or \
+                                ipaddress.ip_address(ip_value) in ipaddress.IPv4Network('192.168.0.0/16'):
+                            continue
+                    # add valid ip address info
+                    logging.info(f'Peer {peer} has external IP {ip_value}:{port}, {ip_type}, {protocol}')
+                    if peer not in provider_ip.keys():
+                        provider_ip[peer] = []
+                    address = Address(ip_value, ip_type, port, protocol)
+                    provider_ip[peer].append(address)
+        except subprocess.TimeoutExpired as e:
+            logging.info(f"Timeout for {peer}")
     return provider_ip
 
 
