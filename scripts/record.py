@@ -723,7 +723,7 @@ def main(dir_prefix, dir_name, file_name, host, port, task):
 
     # star multi-threading for post process
     all_stats = []
-    with concurrent.futures.ProcessPoolExecutor(max_workers=16) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
         future_to_postprocess = {executor.submit(postprocess_file, cid, all_provider_dic, all_block_provider_dic): cid
                                  for cid in all_provider_dic}
         for future in concurrent.futures.as_completed(future_to_postprocess):
