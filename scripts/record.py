@@ -736,7 +736,7 @@ def main(dir_prefix, dir_name, file_name, host, port, task):
             logging.info(f'CID {cid} Getting Result')
             try:
                 stats = future.result()
-                logging.info(f'CID {cid} From future {stats.__dict__}')
+                logging.info(f'CID {cid} From future {stats}')
             except Exception as exc:
                 logging.info(f'Error CID {cid} {exc}')
                 stats = Stats(cid, *[None for _ in range(7)])
