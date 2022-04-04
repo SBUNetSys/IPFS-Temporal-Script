@@ -650,7 +650,7 @@ def postprocess_file(cid, all_provider_dic, all_block_provider_dic):
             logging.info(f'Address {address.__dict__}')
     # save progress
     logging.info(f'Saving Progress CID {cid}')
-    with open('progress.txt', 'a') as fout:
+    with open(f'{cid}_progress.txt', 'a') as fout:
         json.dump(copy.copy(stats), fout, cls=StatsEncoder)
         fout.write('\n')
 
