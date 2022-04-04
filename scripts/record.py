@@ -644,6 +644,11 @@ def postprocess_file(cid, all_provider_dic, all_block_provider_dic):
             get_rtt(address)
             get_ip_hop(address)
             logging.info(f'Address {address.__dict__}')
+    # save progress
+    logging.info(f'Saving Progress CID {cid}')
+    with open('progress.txt', 'a') as fout:
+        json.dump(copy.copy(stats), fout, cls=StatsEncoder)
+        fout.write('\n')
 
     return stats
 
@@ -731,15 +736,11 @@ def main(dir_prefix, dir_name, file_name, host, port, task):
             logging.info(f'CID {cid} Getting Result')
             try:
                 stats = future.result()
+                logging.info(f'CID {cid} From future {stats.__dict__}')
             except Exception as exc:
                 logging.info(f'Error CID {cid} {exc}')
                 stats = Stats(cid, *[None for _ in range(7)])
             all_stats.append(stats)
-            # save progress
-            logging.info(f'Saving Progress CID {cid}')
-            with open('progress.txt', 'a') as fout:
-                json.dump(copy.copy(stats), fout, cls=StatsEncoder)
-                fout.write('\n')
 
     # write to file
     with open(f'{dir_name}_summary.json', 'w') as fout:
