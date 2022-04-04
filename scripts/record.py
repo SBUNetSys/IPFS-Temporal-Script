@@ -425,15 +425,19 @@ def get_ip_hop(address: Address):
     process = subprocess.Popen(
         ['sudo', 'traceroute', address.ip, protocol, '-p', address.port, '-m', '20'],
         stdout=subprocess.PIPE)
-    line = process.stdout.readlines()[-1]
+
     try:
+        process.wait(300)
+        line = process.stdout.readlines()[-1]
         line = line.decode('utf-8')
         line = line.replace("\n", "")
         line = line.lstrip()
         logging.info(line)
         address.ip_hop = line.split(" ")[0]
-    except Exception:
-        logging.error(line)
+    except subprocess.TimeoutExpired as e:
+        logging.info(f'Traceroute timeout {address.ip}')
+    except Exception as e:
+        logging.error(f'Traceroute Error {e}')
 
 
 def get_rtt(address: Address):
