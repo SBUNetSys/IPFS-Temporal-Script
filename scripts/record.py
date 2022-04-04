@@ -9,6 +9,7 @@ from datetime import datetime
 import json
 from json import JSONEncoder
 import logging
+import traceback
 
 import icmplib
 import requests
@@ -742,7 +743,8 @@ def main(dir_prefix, dir_name, file_name, host, port, task):
                 stats = future.result()
                 logging.info(f'CID {cid} From future {stats}')
             except Exception as exc:
-                logging.info(f'Error CID {cid} {exc}')
+                exc_str = traceback.format_exc()
+                logging.info(f'Error CID {cid}:\n{exc_str}')
                 stats = Stats(cid, *[None for _ in range(7)])
             all_stats.append(stats)
 
