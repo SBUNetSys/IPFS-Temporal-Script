@@ -236,9 +236,8 @@ def analyse_ipfs_hops(cid, result_host_dic, visual=False):
     #     return 0, -1
     # map provider and result record, and analyse hop info
     host_result_dic = dict(zip(result_host_dic.values(), result_host_dic.keys()))
-    max_hop = 0
+    max_hop = -1
     for query in all_query:
-        temp_hop = 0
         if query.id in host_result_dic.keys():
             temp_hop = find_depth(query)
             if temp_hop > max_hop:
