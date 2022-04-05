@@ -232,8 +232,8 @@ def analyse_ipfs_hops(cid, result_host_dic, visual=False):
                 uid += 1
                 all_provider.append(provider)
     # case of no exist
-    if len(all_provider) == 0:
-        return 0, -1
+    # if len(all_provider) == 0:
+    #     return 0, -1
     # map provider and result record, and analyse hop info
     host_result_dic = dict(zip(result_host_dic.values(), result_host_dic.keys()))
     max_hop = 0
