@@ -387,6 +387,12 @@ def analyse_content_provider(all_block_provider_dic, cid):
     process = subprocess.Popen(
         ['/root/ipfs_bin/ipfs', 'ls', cid],
         stdout=subprocess.PIPE)
+    try:
+        r_code = process.wait(timeout=300)
+        if r_code != 0:
+            logging.info(f"Error on IPFS LS with CID {cid} and exit code {r_code}")
+    except subprocess.TimeoutExpired:
+        logging.info(f'IPFS ls Timeout with CID {cid}')
     for line in process.stdout.readlines():
         line = line.decode('utf-8')
         line = line.split(" ")
@@ -487,7 +493,9 @@ def get_peer_ip(result_host_dic: dict):
         process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'dht', 'findpeer', peer], stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         try:
-            process.wait(timeout=300)
+            r_code = process.wait(timeout=300)
+            if r_code != 0:
+                logging.info(f"Error on IPFS findpeer with Peer {peer} and exit code {r_code}")
             # case of no route find
             for line in process.stderr.readlines():
                 if str(line) != '':
@@ -536,7 +544,9 @@ def ips_find_provider(cid):
         stdout.flush()
         try:
             process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'stats', 'dht'], stdout=stdout)
-            process.wait(timeout=300)
+            r_code = process.wait(timeout=300)
+            if r_code != 0:
+                logging.info(f"Error on IPFS stats dht with CID {cid} and exit code {r_code}")
         except subprocess.TimeoutExpired:
             process.kill()
 
@@ -544,7 +554,9 @@ def ips_find_provider(cid):
         stdout.flush()
         try:
             process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'dht', 'findprovs', '-v', cid], stdout=stdout)
-            process.wait(timeout=300)
+            r_code = process.wait(timeout=300)
+            if r_code != 0:
+                logging.info(f"Error on IPFS dht findprovs with CID {cid} and exit code {r_code}")
         except subprocess.TimeoutExpired:
             process.kill()
             logging.info(f'CID {cid} findprov timeout')
@@ -561,7 +573,9 @@ def get_storage_info(cid):
         stdout.flush()
         try:
             process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'dag', 'stat', cid], stdout=stdout)
-            process.wait(timeout=300)
+            r_code = process.wait(timeout=300)
+            if r_code != 0:
+                logging.info(f"Error on IPFS dag stat with CID {cid} and exit code {r_code}")
         except subprocess.TimeoutExpired:
             logging.info(f'CID {cid} storage timeout')
             process.kill()
@@ -578,7 +592,9 @@ def get_latency_info(cid):
         stdout.flush()
         try:
             process = subprocess.Popen(['/root/ipfs_bin/ipfs', 'get', cid], stdout=stdout)
-            process.wait(timeout=600)
+            r_code = process.wait(timeout=600)
+            if r_code != 0:
+                logging.info(f"Error on IPFS get with CID {cid} and exit code {r_code}")
         except subprocess.TimeoutExpired:
             process.kill()
             logging.info(f'CID {cid} download timeout')
@@ -611,12 +627,12 @@ def postprocess_file(cid, all_provider_dic, all_block_provider_dic):
     logging.info(f'CID {cid} #blocks {num_blocks}, size {content_size}')
     resolve_time, download_time = analyse_latency(cid)
     logging.info(f'CID {cid} #r_time {resolve_time}, d_time {download_time}')
-    if num_blocks != -1 and content_size != 0:
+    if num_blocks != -1 and content_size != 0 and ipfs_hop != -1:
         actual_provider = analyse_content_provider(all_block_provider_dic, cid)
     else:
         actual_provider = []
     logging.info(f'CID {cid} actual provider {actual_provider}')
-    if ipfs_hop == 0:
+    if ipfs_hop == -1:
         # case of no result find
         logging.info(f'NO IPFS INFO FOUND CID {cid}')
         # stats = Stats(cid, ipfs_hop, {}, None, None, None, None, None)
