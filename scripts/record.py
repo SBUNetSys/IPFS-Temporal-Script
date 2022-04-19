@@ -496,11 +496,14 @@ def get_peer_ip(result_host_dic: dict):
             r_code = process.wait(timeout=300)
             if r_code != 0:
                 logging.info(f"Error on IPFS findpeer with Peer {peer} and exit code {r_code}")
+                provider_ip[peer] = []
+                return provider_ip
             # case of no route find
             for line in process.stderr.readlines():
-                if str(line) != '':
+                if 'Error' in str(line):
                     provider_ip[peer] = []
-                    break
+                    return provider_ip
+            provider_ip[peer] = []
             with open(f'{peer}_ip.txt', 'w+') as stdout:
                 for line in process.stdout.readlines():
                     line = line.decode('utf-8')
