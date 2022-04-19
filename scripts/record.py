@@ -501,6 +501,7 @@ def get_peer_ip(result_host_dic: dict):
             # case of no route find
             for line in process.stderr.readlines():
                 if 'Error' in str(line):
+                    logging.info(f"Error on IPFS findpeer with Peer {peer} output {str(line)}")
                     provider_ip[peer] = []
                     return provider_ip
             provider_ip[peer] = []
