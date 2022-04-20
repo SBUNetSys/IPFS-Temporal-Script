@@ -687,7 +687,9 @@ def clear_ipfs_repo():
     for line in process.stdout.readlines():
         logging.info(f'Repo GCed {line}')
     try:
-        process.wait(timeout=300)
+        rcode = process.wait(timeout=300)
+        if rcode != 0:
+            logging.info(f'Error exit code {rcode}')
     except subprocess.TimeoutExpired:
         logging.info(f'Repo GC Timeout')
         process.kill()
